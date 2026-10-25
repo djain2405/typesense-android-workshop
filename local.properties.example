@@ -13,7 +13,7 @@
 #   typesense.protocol=https
 #   typesense.host=your-cluster.a1.typesense.net
 #   typesense.port=443
-#   typesense.collection=sessions-yourname
+#   typesense.collection=books-yourname
 #   typesense.searchApiKey=search-only-key
 #   typesense.adminApiKey=admin-key-for-the-index-task-only
 
@@ -21,6 +21,6 @@
 typesense.protocol=http
 typesense.host=10.0.2.2
 typesense.port=8108
-typesense.collection=sessions
+typesense.collection=books
 typesense.searchApiKey=workshop-admin-key
 typesense.adminApiKey=workshop-admin-key

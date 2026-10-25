@@ -1,0 +1,112 @@
+[
+  {
+    "id": "hobbit",
+    "title": "The Hobbit",
+    "authors": "J.R.R. Tolkien",
+    "genre": "Fantasy",
+    "description": "Bilbo leaves the Shire with a company of dwarves.",
+    "publication_year": 1937,
+    "rating": 4.8,
+    "store": "Central Books",
+    "location": [37.7749, -122.4194]
+  },
+  {
+    "id": "lotr",
+    "title": "The Lord of the Rings",
+    "authors": "J.R.R. Tolkien",
+    "genre": "Fantasy",
+    "description": "The journey to destroy the one ring.",
+    "publication_year": 1954,
+    "rating": 4.9,
+    "store": "Central Books",
+    "location": [37.7749, -122.4194]
+  },
+  {
+    "id": "harry",
+    "title": "Harry Potter and the Sorcerer's Stone",
+    "authors": "J.K. Rowling",
+    "genre": "Fantasy",
+    "description": "Harry discovers he is a wizard and starts school at Hogwarts.",
+    "publication_year": 1997,
+    "rating": 4.7,
+    "store": "Harbor Books",
+    "location": [37.8044, -122.2712]
+  },
+  {
+    "id": "dune",
+    "title": "Dune",
+    "authors": "Frank Herbert",
+    "genre": "Science Fiction",
+    "description": "A science fiction novel about politics and spice on Arrakis.",
+    "publication_year": 1965,
+    "rating": 4.6,
+    "store": "Harbor Books",
+    "location": [37.8044, -122.2712]
+  },
+  {
+    "id": "neuromancer",
+    "title": "Neuromancer",
+    "authors": "William Gibson",
+    "genre": "Science Fiction",
+    "description": "A science fiction story that defined cyberpunk.",
+    "publication_year": 1984,
+    "rating": 4.4,
+    "store": "Central Books",
+    "location": [37.7749, -122.4194]
+  },
+  {
+    "id": "foundation",
+    "title": "Foundation",
+    "authors": "Isaac Asimov",
+    "genre": "Science Fiction",
+    "description": "A science fiction saga about predicting the fall of an empire.",
+    "publication_year": 1951,
+    "rating": 4.5,
+    "store": "Harbor Books",
+    "location": [37.8044, -122.2712]
+  },
+  {
+    "id": "pride",
+    "title": "Pride and Prejudice",
+    "authors": "Jane Austen",
+    "genre": "Classic",
+    "description": "Elizabeth Bennet and Mr Darcy misjudge each other.",
+    "publication_year": 1813,
+    "rating": 4.6,
+    "store": "Central Books",
+    "location": [37.7749, -122.4194]
+  },
+  {
+    "id": "emma",
+    "title": "Emma",
+    "authors": "Jane Austen",
+    "genre": "Classic",
+    "description": "A clever matchmaker who is often wrong.",
+    "publication_year": 1815,
+    "rating": 4.2,
+    "store": "Central Books",
+    "location": [37.7749, -122.4194]
+  },
+  {
+    "id": "odyssey",
+    "title": "The Odyssey",
+    "authors": "Homer",
+    "genre": "Poetry",
+    "description": "A classic of ancient storytelling about the long trip home.",
+    "publication_year": 1614,
+    "rating": 4.3,
+    "store": "Harbor Books",
+    "location": [37.8044, -122.2712]
+  },
+  {
+    "id": "ackroyd",
+    "title": "The Murder of Roger Ackroyd",
+    "authors": "Agatha Christie",
+    "genre": "Mystery",
+    "description": "A village murder with a narrator who knows too much.",
+    "publication_year": 1926,
+    "rating": 4.4,
+    "store": "Harbor Books",
+    "location": [37.8044, -122.2712]
+  }
+]

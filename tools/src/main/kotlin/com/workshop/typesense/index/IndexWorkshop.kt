@@ -1,14 +1,14 @@
-package com.droidcon.uganda.workshop.index
+package com.workshop.typesense.index
 
+import org.json.JSONArray
 import org.typesense.api.Client
 import org.typesense.api.Configuration
-import org.typesense.model.CollectionSchema
 import org.typesense.api.FieldTypes
+import org.typesense.model.CollectionSchema
 import org.typesense.model.Field
 import org.typesense.model.ImportDocumentsParameters
 import org.typesense.model.IndexAction
 import org.typesense.resources.Node
-import org.json.JSONArray
 import java.io.File
 import java.time.Duration
 import java.util.Properties
@@ -16,12 +16,12 @@ import java.util.Properties
 /**
  * Run with ./gradlew indexSessions
  *
- * Exercise 1 is already implemented: it creates the collection and imports data/sessions.json.
+ * Exercise 1 is already implemented: it creates the collection and imports data/books.json.
  * Exercises 5 and 6 are the TODO functions at the bottom.
  */
 fun main() {
     val properties = loadLocalProperties()
-    val collection = properties.getProperty("typesense.collection")?.trim().orEmpty().ifBlank { "sessions" }
+    val collection = properties.getProperty("typesense.collection")?.trim().orEmpty().ifBlank { "books" }
     val client = adminClient(properties)
     val indexed = exercise1CreateAndImport(client, collection)
     println("Indexed $indexed documents into '$collection'.")
@@ -32,25 +32,26 @@ fun main() {
 fun exercise1CreateAndImport(client: Client, collection: String): Int {
     val fields = listOf(
         Field().name("title").type(FieldTypes.STRING),
-        Field().name("speaker").type(FieldTypes.STRING),
-        Field().name("track").type(FieldTypes.STRING).facet(true),
+        Field().name("authors").type(FieldTypes.STRING),
+        Field().name("genre").type(FieldTypes.STRING).facet(true),
         Field().name("description").type(FieldTypes.STRING),
-        Field().name("place").type(FieldTypes.STRING).facet(true),
-        Field().name("start_time").type(FieldTypes.INT64).sort(true),
+        Field().name("publication_year").type(FieldTypes.INT64),
+        Field().name("rating").type(FieldTypes.FLOAT).sort(true),
+        Field().name("store").type(FieldTypes.STRING).facet(true),
         Field().name("location").type("geopoint")
     )
-    val schema = CollectionSchema().name(collection).fields(fields).defaultSortingField("start_time")
+    val schema = CollectionSchema().name(collection).fields(fields).defaultSortingField("rating")
     try {
         client.collections(collection).retrieve()
     } catch (_: Exception) {
         client.collections().create(schema)
     }
-    return importSessions(client, collection)
+    return importBooks(client, collection)
 }
 
-private fun importSessions(client: Client, collection: String): Int {
-    val sessions = parseSessions(File("data/sessions.json").readText())
-    val jsonl = sessions.joinToString("\n")
+private fun importBooks(client: Client, collection: String): Int {
+    val books = parseBooks(File("data/books.json").readText())
+    val jsonl = books.joinToString("\n")
     val parameters = ImportDocumentsParameters().action(IndexAction.UPSERT)
     client.collections(collection).documents().import_(jsonl, parameters)
     return client.collections(collection).retrieve().numDocuments.toInt()
@@ -58,14 +59,14 @@ private fun importSessions(client: Client, collection: String): Int {
 
 /**
  * EXERCISE 5
- * Upsert a synonym set so `compose` also matches `jetpack`, and link it to this collection.
- * Upsert a curation set that pins document id `welcome` at position 1 when the query is `welcome`.
+ * Upsert a synonym set so `scifi` also matches `science fiction`, and link it to this collection.
+ * Upsert a curation set that pins document id `pride` at position 1 when the query is exactly `classic`.
  *
- * Expect: search `compose` and the Jetpack talk appears.
- * Expect: search `welcome` and Welcome Address is the first result.
+ * Expect: search `scifi` and Dune, Neuromancer, and Foundation appear.
+ * Expect: search `classic` and Pride and Prejudice is the first result.
  */
 fun exercise5SynonymsAndCuration(client: Client, collection: String) {
-    println("EXERCISE 5 TODO: add the compose/jetpack synonym set and pin the welcome keynote.")
+    println("EXERCISE 5 TODO: add the scifi synonym set and pin Pride and Prejudice.")
 }
 
 /**
@@ -96,7 +97,7 @@ private fun loadLocalProperties(): Properties {
     return Properties().apply { file.inputStream().use { load(it) } }
 }
 
-private fun parseSessions(json: String): List<String> {
+private fun parseBooks(json: String): List<String> {
     val array = JSONArray(json)
     return List(array.length()) { index -> array.getJSONObject(index).toString() }
 }

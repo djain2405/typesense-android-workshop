@@ -1,4 +1,4 @@
-package com.droidcon.uganda.workshop
+package com.workshop.typesense
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -24,10 +24,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -46,16 +44,15 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-private val DroidConBlue = Color(0xFF0055FF)
-private val DroidConGreen = Color(0xFF00FF4F)
+private val Ink = Color(0xFF1F6B4A)
+private val Highlight = Color(0xFFFFE08A)
 
 class WorkshopViewModel : ViewModel() {
     var query by mutableStateOf("")
-    var track by mutableStateOf("All")
-    var sortByTime by mutableStateOf(false)
+    var genre by mutableStateOf("All")
+    var sortByRating by mutableStateOf(false)
     var result by mutableStateOf(WorkshopResult(emptyList(), emptyList(), 0))
     var error by mutableStateOf<String?>(null)
-    var loading by mutableStateOf(false)
 
     private val searcher = workshopClient()?.let { WorkshopSearch(it, workshopCollection()) }
     private var searchJob: Job? = null
@@ -69,13 +66,13 @@ class WorkshopViewModel : ViewModel() {
         scheduleSearch()
     }
 
-    fun onTrack(value: String) {
-        track = value
+    fun onGenre(value: String) {
+        genre = value
         scheduleSearch()
     }
 
-    fun onSortByTime(value: Boolean) {
-        sortByTime = value
+    fun onSortByRating(value: Boolean) {
+        sortByRating = value
         scheduleSearch()
     }
 
@@ -88,17 +85,13 @@ class WorkshopViewModel : ViewModel() {
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
             delay(200)
-            loading = true
             error = null
             try {
-                val next = withContext(Dispatchers.IO) {
-                    current.search(query, track, sortByTime)
+                result = withContext(Dispatchers.IO) {
+                    current.search(query, genre, sortByRating)
                 }
-                result = next
             } catch (exception: Exception) {
                 error = exception.message ?: "Search failed"
-            } finally {
-                loading = false
             }
         }
     }
@@ -106,12 +99,7 @@ class WorkshopViewModel : ViewModel() {
 
 @Composable
 fun WorkshopScreen(viewModel: WorkshopViewModel = viewModel()) {
-    MaterialTheme(
-        colorScheme = lightColorScheme(
-            primary = DroidConBlue,
-            tertiary = DroidConGreen
-        )
-    ) {
+    MaterialTheme(colorScheme = lightColorScheme(primary = Ink)) {
         Scaffold { padding ->
             Column(
                 modifier = Modifier
@@ -120,7 +108,7 @@ fun WorkshopScreen(viewModel: WorkshopViewModel = viewModel()) {
                     .padding(horizontal = 16.dp)
             ) {
                 Text(
-                    "DroidCon search",
+                    "Bookstore search",
                     modifier = Modifier.padding(top = 16.dp),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
@@ -137,28 +125,28 @@ fun WorkshopScreen(viewModel: WorkshopViewModel = viewModel()) {
                         .fillMaxWidth()
                         .padding(top = 12.dp),
                     singleLine = true,
-                    placeholder = { Text("Search sessions") },
+                    placeholder = { Text("Search books") },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     keyboardActions = KeyboardActions(onSearch = { viewModel.onQueryChange(viewModel.query) })
                 )
-                TrackRow(
+                GenreRow(
                     facets = viewModel.result.facets,
-                    selected = viewModel.track,
-                    onSelect = viewModel::onTrack
+                    selected = viewModel.genre,
+                    onSelect = viewModel::onGenre
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(
-                        selected = !viewModel.sortByTime,
-                        onClick = { viewModel.onSortByTime(false) },
+                        selected = !viewModel.sortByRating,
+                        onClick = { viewModel.onSortByRating(false) },
                         label = { Text("Relevance") }
                     )
                     FilterChip(
-                        selected = viewModel.sortByTime,
-                        onClick = { viewModel.onSortByTime(true) },
-                        label = { Text("By time") }
+                        selected = viewModel.sortByRating,
+                        onClick = { viewModel.onSortByRating(true) },
+                        label = { Text("By rating") }
                     )
                     Text(
-                        viewModel.result.found.let { "$it results" },
+                        "${viewModel.result.found} results",
                         modifier = Modifier.padding(top = 12.dp),
                         color = Color.DarkGray
                     )
@@ -175,7 +163,7 @@ fun WorkshopScreen(viewModel: WorkshopViewModel = viewModel()) {
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(viewModel.result.hits, key = { it.id }) { hit ->
-                        SessionCard(hit)
+                        BookCard(hit)
                     }
                 }
             }
@@ -184,13 +172,13 @@ fun WorkshopScreen(viewModel: WorkshopViewModel = viewModel()) {
 }
 
 @Composable
-private fun TrackRow(
-    facets: List<TrackFacet>,
+private fun GenreRow(
+    facets: List<GenreFacet>,
     selected: String,
     onSelect: (String) -> Unit
 ) {
-    val tracks = listOf("All") + if (facets.isEmpty()) {
-        listOf("Android", "Kotlin", "Keynote", "Flutter", "Design", "Cloud")
+    val genres = listOf("All") + if (facets.isEmpty()) {
+        listOf("Fantasy", "Science Fiction", "Classic", "Mystery", "Poetry")
     } else {
         facets.map { it.name }
     }
@@ -198,15 +186,15 @@ private fun TrackRow(
         modifier = Modifier.padding(vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        items(tracks) { name ->
+        items(genres) { name ->
             val count = facets.firstOrNull { it.name == name }?.count
             val label = if (count == null || name == "All") name else "$name $count"
             Button(
                 onClick = { onSelect(name) },
                 shape = RoundedCornerShape(20.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (selected == name) DroidConBlue else Color.White,
-                    contentColor = if (selected == name) Color.White else DroidConBlue
+                    containerColor = if (selected == name) Ink else Color.White,
+                    contentColor = if (selected == name) Color.White else Ink
                 )
             ) {
                 Text(label)
@@ -216,19 +204,22 @@ private fun TrackRow(
 }
 
 @Composable
-private fun SessionCard(hit: SessionHit) {
+private fun BookCard(hit: BookHit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF4F7FF))
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF3F7F4))
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text(hit.track, color = DroidConBlue, fontWeight = FontWeight.Bold)
+            Text(hit.genre, color = Ink, fontWeight = FontWeight.Bold)
             Text(hit.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Text(hit.speaker)
+            Text(hit.authors)
+            if (hit.rating.isNotBlank()) {
+                Text("Rating ${hit.rating}")
+            }
             if (hit.snippet.isNotBlank()) {
                 Text(highlightSnippet(hit.snippet), modifier = Modifier.padding(top = 4.dp))
             }
-            Text(hit.place, color = Color.DarkGray, modifier = Modifier.padding(top = 4.dp))
+            Text(hit.store, color = Color.DarkGray, modifier = Modifier.padding(top = 4.dp))
         }
     }
 }
@@ -248,7 +239,7 @@ fun highlightSnippet(snippet: String): AnnotatedString = buildAnnotatedString {
             append(after)
             break
         }
-        pushStyle(SpanStyle(fontWeight = FontWeight.ExtraBold, background = DroidConGreen))
+        pushStyle(SpanStyle(fontWeight = FontWeight.ExtraBold, background = Highlight))
         append(after.substring(0, end))
         pop()
         remaining = after.substring(end + "</mark>".length)

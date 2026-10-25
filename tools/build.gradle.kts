@@ -17,8 +17,8 @@ kotlin {
 
 tasks.register<JavaExec>("indexSessions") {
     group = "workshop"
-    description = "Index data/sessions.json. The admin key is read here and is not packaged into the app."
+    description = "Index data/books.json. The admin key is read here and is not packaged into the app."
     classpath = sourceSets["main"].runtimeClasspath
-    mainClass.set("com.droidcon.uganda.workshop.index.IndexWorkshopKt")
+    mainClass.set("com.workshop.typesense.index.IndexWorkshopKt")
     workingDir = rootProject.projectDir
 }

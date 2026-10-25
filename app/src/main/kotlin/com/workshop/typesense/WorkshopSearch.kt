@@ -1,4 +1,4 @@
-package com.droidcon.uganda.workshop
+package com.workshop.typesense
 
 import org.typesense.api.Client
 import org.typesense.model.SearchParameters
@@ -11,27 +11,28 @@ class WorkshopSearch(
     private val client: Client,
     private val collection: String
 ) {
-    fun search(query: String, track: String?, sortByTime: Boolean): WorkshopResult {
+    fun search(query: String, genre: String?, sortByRating: Boolean): WorkshopResult {
         val parameters = SearchParameters()
             .q(query.ifBlank { "*" })
             .queryBy(exercise2QueryBy())
             .prefix(exercise2Prefix())
             .perPage(30)
 
-        exercise3Filter(track)?.let { parameters.filterBy(it) }
+        exercise3Filter(genre)?.let { parameters.filterBy(it) }
         exercise3Facet()?.let { parameters.facetBy(it) }
         exercise4HighlightFields()?.let { parameters.highlightFullFields(it) }
-        exerciseSort(sortByTime)?.let { parameters.sortBy(it) }
+        exerciseSort(sortByRating)?.let { parameters.sortBy(it) }
 
         val result = client.collections(collection).documents().search(parameters)
         val hits = result.hits.orEmpty().map { hit ->
             val document = hit.document.orEmpty()
-            SessionHit(
+            BookHit(
                 id = document["id"].asText(),
                 title = document["title"].asText(),
-                speaker = document["speaker"].asText(),
-                track = document["track"].asText(),
-                place = document["place"].asText(),
+                authors = document["authors"].asText(),
+                genre = document["genre"].asText(),
+                rating = document["rating"].asText(),
+                store = document["store"].asText(),
                 snippet = hit.highlights.orEmpty()
                     .firstOrNull { !it.snippet.isNullOrBlank() }
                     ?.snippet
@@ -39,51 +40,52 @@ class WorkshopSearch(
             )
         }
         val facets = result.facetCounts.orEmpty()
-            .firstOrNull { it.fieldName == "track" }
+            .firstOrNull { it.fieldName == "genre" }
             ?.counts
             .orEmpty()
-            .map { TrackFacet(name = it.value.orEmpty(), count = it.count ?: 0) }
+            .map { GenreFacet(name = it.value.orEmpty(), count = it.count ?: 0) }
         return WorkshopResult(hits = hits, facets = facets, found = result.found ?: hits.size)
     }
 }
 
-data class SessionHit(
+data class BookHit(
     val id: String,
     val title: String,
-    val speaker: String,
-    val track: String,
-    val place: String,
+    val authors: String,
+    val genre: String,
+    val rating: String,
+    val store: String,
     val snippet: String
 )
 
-data class TrackFacet(val name: String, val count: Int)
+data class GenreFacet(val name: String, val count: Int)
 
 data class WorkshopResult(
-    val hits: List<SessionHit>,
-    val facets: List<TrackFacet>,
+    val hits: List<BookHit>,
+    val facets: List<GenreFacet>,
     val found: Int
 )
 
 /**
  * EXERCISE 2
- * Search the title, the speaker name, and the track.
- * Then return "true" from [exercise2Prefix] so "kot" matches Kotlin before the word is finished.
+ * Search the title, the author names, and the genre.
+ * Then return "true" from [exercise2Prefix] so "har" matches Harry Potter before the word is finished.
  *
- * Expect: query_by is "title,speaker,track" and prefix is "true".
- * Type `kot` and the Kotlin talks show up.
+ * Expect: query_by is "title,authors,genre" and prefix is "true".
+ * Type `har` and Harry Potter shows up.
  */
-fun exercise2QueryBy(): String = "title"
+fun exercise2QueryBy(): String = "title,authors"
 
 fun exercise2Prefix(): String = "false"
 
 /**
  * EXERCISE 3
- * When [track] is not "All", return a filter like `track:=Kotlin`.
- * Return "track" from [exercise3Facet] so each chip can show a count.
+ * When [genre] is not "All", return a filter like `genre:=Fantasy`.
+ * Return "genre" from [exercise3Facet] so each chip can show a count.
  *
- * Expect: tapping Kotlin leaves only the Kotlin talks, with a count on the chip.
+ * Expect: tapping Fantasy leaves only the fantasy books, with a count on the chip.
  */
-fun exercise3Filter(track: String?): String? = null
+fun exercise3Filter(genre: String?): String? = null
 
 fun exercise3Facet(): String? = null
 
@@ -91,13 +93,13 @@ fun exercise3Facet(): String? = null
  * EXERCISE 4
  * Highlight matches in the title and the description.
  *
- * Expect: searching `firebase` bolds the matched word under the Compose talk.
+ * Expect: searching `arrakis` bolds the matched word under Dune.
  */
 fun exercise4HighlightFields(): String? = null
 
 /**
- * Already wired. Relevance is the default. "By time" sends start_time:asc.
+ * Already wired. Relevance is the default. "By rating" sends rating:desc.
  */
-fun exerciseSort(sortByTime: Boolean): String? = if (sortByTime) "start_time:asc" else null
+fun exerciseSort(sortByRating: Boolean): String? = if (sortByRating) "rating:desc" else null
 
 private fun Any?.asText(): String = this?.toString().orEmpty()
