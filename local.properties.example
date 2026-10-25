@@ -1,0 +1,26 @@
+# Copy this file to local.properties. That file is gitignored.
+#
+# Emulator talking to Docker on this laptop:
+#   sdk.dir=/path/to/Android/sdk
+#   typesense.protocol=http
+#   typesense.host=10.0.2.2
+#   typesense.port=8108
+#
+# Physical phone talking to Docker on this laptop (use the laptop's LAN IP):
+#   typesense.host=192.168.1.20
+#
+# Shared workshop cluster:
+#   typesense.protocol=https
+#   typesense.host=your-cluster.a1.typesense.net
+#   typesense.port=443
+#   typesense.collection=sessions-yourname
+#   typesense.searchApiKey=search-only-key
+#   typesense.adminApiKey=admin-key-for-the-index-task-only
+
+# sdk.dir=/Users/you/Library/Android/sdk
+typesense.protocol=http
+typesense.host=10.0.2.2
+typesense.port=8108
+typesense.collection=sessions
+typesense.searchApiKey=workshop-admin-key
+typesense.adminApiKey=workshop-admin-key
