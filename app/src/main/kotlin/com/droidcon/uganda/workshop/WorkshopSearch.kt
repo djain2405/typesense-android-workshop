@@ -72,9 +72,9 @@ data class WorkshopResult(
  * Expect: query_by is "title,speaker,track" and prefix is "true".
  * Type `kot` and the Kotlin talks show up.
  */
-fun exercise2QueryBy(): String = "title"
+fun exercise2QueryBy(): String = "title,speaker,track"
 
-fun exercise2Prefix(): String = "false"
+fun exercise2Prefix(): String = "true"
 
 /**
  * EXERCISE 3
@@ -83,9 +83,12 @@ fun exercise2Prefix(): String = "false"
  *
  * Expect: tapping Kotlin leaves only the Kotlin talks, with a count on the chip.
  */
-fun exercise3Filter(track: String?): String? = null
+fun exercise3Filter(track: String?): String? {
+    if (track.isNullOrBlank() || track == "All") return null
+    return "track:=$track"
+}
 
-fun exercise3Facet(): String? = null
+fun exercise3Facet(): String? = "track"
 
 /**
  * EXERCISE 4
@@ -93,7 +96,7 @@ fun exercise3Facet(): String? = null
  *
  * Expect: searching `firebase` bolds the matched word under the Compose talk.
  */
-fun exercise4HighlightFields(): String? = null
+fun exercise4HighlightFields(): String? = "title,description"
 
 /**
  * Already wired. Relevance is the default. "By time" sends start_time:asc.

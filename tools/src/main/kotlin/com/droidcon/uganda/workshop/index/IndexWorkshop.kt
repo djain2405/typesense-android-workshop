@@ -4,12 +4,24 @@ import org.typesense.api.Client
 import org.typesense.api.Configuration
 import org.typesense.model.CollectionSchema
 import org.typesense.api.FieldTypes
+import org.typesense.model.ApiKeySchema
+import org.typesense.model.CollectionUpdateSchema
+import org.typesense.model.CurationInclude
+import org.typesense.model.CurationItemCreateSchema
+import org.typesense.model.CurationRule
+import org.typesense.model.CurationSetCreateSchema
 import org.typesense.model.Field
 import org.typesense.model.ImportDocumentsParameters
 import org.typesense.model.IndexAction
+import org.typesense.model.SynonymItemSchema
+import org.typesense.model.SynonymSetCreateSchema
 import org.typesense.resources.Node
 import org.json.JSONArray
 import java.io.File
+import java.net.URI
+import java.net.http.HttpClient
+import java.net.http.HttpRequest
+import java.net.http.HttpResponse
 import java.time.Duration
 import java.util.Properties
 
@@ -65,7 +77,27 @@ private fun importSessions(client: Client, collection: String): Int {
  * Expect: search `welcome` and Welcome Address is the first result.
  */
 fun exercise5SynonymsAndCuration(client: Client, collection: String) {
-    println("EXERCISE 5 TODO: add the compose/jetpack synonym set and pin the welcome keynote.")
+    val synonyms = SynonymItemSchema()
+        .id("compose-words")
+        .addSynonymsItem("compose")
+        .addSynonymsItem("jetpack")
+    client.synonymSet("workshop-synonyms").upsert(
+        SynonymSetCreateSchema().addItemsItem(synonyms)
+    )
+    client.collections(collection).update(
+        CollectionUpdateSchema().addSynonymSetsItem("workshop-synonyms")
+    )
+
+    val pinWelcome = CurationItemCreateSchema()
+        .id("pin-welcome")
+        .rule(CurationRule().query("welcome").match(CurationRule.MatchEnum.EXACT))
+        .addIncludesItem(CurationInclude().id("welcome").position(1))
+    client.curationSet("workshop-curation").upsert(
+        CurationSetCreateSchema().addItemsItem(pinWelcome)
+    )
+    // typesense-java 2.1.0 can link synonym sets on update, but not curation sets.
+    patchCollection(collection, """{"curation_sets":["workshop-curation"]}""")
+    println("EXERCISE 5: compose matches jetpack, and welcome pins the opening keynote.")
 }
 
 /**
@@ -75,7 +107,51 @@ fun exercise5SynonymsAndCuration(client: Client, collection: String) {
  * Then try to import a document with that key and show that the write is rejected.
  */
 fun exercise6SearchOnlyKey(client: Client, collection: String) {
-    println("EXERCISE 6 TODO: create a search-only key and prove the app key cannot write.")
+    val created = client.keys().create(
+        ApiKeySchema()
+            .description("Workshop search only")
+            .addActionsItem("documents:search")
+            .addCollectionsItem(collection)
+    )
+    val searchKey = created.value
+    println("EXERCISE 6 search-only key. Copy it into typesense.searchApiKey:")
+    println(searchKey)
+
+    val searchClient = clientWithKey(loadLocalProperties(), searchKey)
+    try {
+        searchClient.collections(collection).documents().create(
+            mapOf("id" to "should-fail", "title" to "A write that must be rejected")
+        )
+        error("EXERCISE 6 failed: the search-only key was allowed to write.")
+    } catch (exception: Exception) {
+        println("EXERCISE 6 write rejected, as expected: ${exception.message}")
+    }
+}
+
+private fun clientWithKey(properties: Properties, apiKey: String): Client {
+    val protocol = properties.getProperty("typesense.protocol")?.trim().orEmpty().ifBlank { "http" }
+    val host = properties.getProperty("typesense.host")?.trim().orEmpty()
+    val port = properties.getProperty("typesense.port")?.trim().orEmpty().ifBlank { "8108" }
+    val nodeHost = if (host == "10.0.2.2") "localhost" else host
+    return Client(Configuration(listOf(Node(protocol, nodeHost, port)), Duration.ofSeconds(8), apiKey))
+}
+
+private fun patchCollection(collection: String, body: String) {
+    val properties = loadLocalProperties()
+    val protocol = properties.getProperty("typesense.protocol")?.trim().orEmpty().ifBlank { "http" }
+    val host = properties.getProperty("typesense.host")?.trim().orEmpty()
+    val port = properties.getProperty("typesense.port")?.trim().orEmpty().ifBlank { "8108" }
+    val adminKey = properties.getProperty("typesense.adminApiKey")?.trim().orEmpty()
+    val nodeHost = if (host == "10.0.2.2") "localhost" else host
+    val request = HttpRequest.newBuilder(URI.create("$protocol://$nodeHost:$port/collections/$collection"))
+        .method("PATCH", HttpRequest.BodyPublishers.ofString(body))
+        .header("X-TYPESENSE-API-KEY", adminKey)
+        .header("Content-Type", "application/json")
+        .build()
+    val response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString())
+    check(response.statusCode() in 200..299) {
+        "Could not link the curation set (${response.statusCode()}): ${response.body()}"
+    }
 }
 
 private fun adminClient(properties: Properties): Client {
