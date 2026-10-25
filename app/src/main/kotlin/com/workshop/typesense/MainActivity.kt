@@ -1,4 +1,4 @@
-package com.droidcon.uganda.workshop
+package com.workshop.typesense
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity

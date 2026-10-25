@@ -18,11 +18,11 @@ fun typesenseProperty(name: String, default: String = ""): String {
 }
 
 android {
-    namespace = "com.droidcon.uganda.workshop"
+    namespace = "com.workshop.typesense"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.droidcon.uganda.workshop"
+        applicationId = "com.workshop.typesense"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
@@ -33,7 +33,7 @@ android {
         buildConfigField("String", "TYPESENSE_HOST", quote(typesenseProperty("typesense.host")))
         buildConfigField("String", "TYPESENSE_PORT", quote(typesenseProperty("typesense.port", "8108")))
         buildConfigField("String", "TYPESENSE_SEARCH_API_KEY", quote(typesenseProperty("typesense.searchApiKey")))
-        buildConfigField("String", "TYPESENSE_COLLECTION", quote(typesenseProperty("typesense.collection", "sessions")))
+        buildConfigField("String", "TYPESENSE_COLLECTION", quote(typesenseProperty("typesense.collection", "books")))
     }
 
     buildTypes {

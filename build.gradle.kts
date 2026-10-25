@@ -7,6 +7,6 @@ plugins {
 
 tasks.register("indexSessions") {
     group = "workshop"
-    description = "Create the Typesense collection and import data/sessions.json. Uses the admin key from local.properties."
+    description = "Create the Typesense collection and import data/books.json. Uses the admin key from local.properties."
     dependsOn(":tools:indexSessions")
 }

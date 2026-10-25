@@ -1,4 +1,4 @@
-package com.droidcon.uganda.workshop
+package com.workshop.typesense
 
 import org.typesense.api.Client
 import org.typesense.api.Configuration
@@ -17,4 +17,4 @@ fun workshopClient(): Client? {
     return Client(Configuration(listOf(node), Duration.ofSeconds(4), key))
 }
 
-fun workshopCollection(): String = BuildConfig.TYPESENSE_COLLECTION.ifBlank { "sessions" }
+fun workshopCollection(): String = BuildConfig.TYPESENSE_COLLECTION.ifBlank { "books" }
